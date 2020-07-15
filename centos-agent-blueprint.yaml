@@ -1,0 +1,69 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+
+imports:
+  - https://cloudify.co/spec/cloudify/5.0.5/types.yaml
+  - plugin:cloudify-openstack-plugin
+
+
+dsl_definitions:
+
+  client_config: &client_config
+    auth_url: { get_secret: auth_url }
+    username: { get_secret: username }
+    password: { get_secret: password }
+    project_name: { get_secret: project_name }
+    region_name: { get_secret:  region_name }
+
+
+inputs:
+
+  instance_name:
+    default: centos-agent
+
+  image_id:
+    default: 4d8aad24-e7c4-4430-8b8a-aa9a9dd585ce
+
+  flavor_id:
+    default: 2
+
+  keypair_name:
+    default: rackspace-keypair
+
+  network_name:
+    default: internal
+
+  security_group_name:
+    default: allow-all
+
+
+node_templates:
+
+  vm:
+    type: cloudify.nodes.openstack.Server
+    properties:
+      client_config: *client_config
+      agent_config:
+        install_method: init_script
+        user: centos
+      resource_config:
+        name: { get_input: instance_name }
+        image_id: { get_input: image_id }
+        flavor_id: { get_input: flavor_id }
+        key_name: { get_input: keypair_name }
+        networks:
+          - name: { get_input: network_name }
+        security_groups:
+          - name: { get_input: security_group_name }
+
+  server_script:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: 444
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          implementation: scripts/start-vm.sh
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm

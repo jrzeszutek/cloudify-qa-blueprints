@@ -1,0 +1,69 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+
+imports:
+  - https://cloudify.co/spec/cloudify/5.0.5/types.yaml
+  - plugin:cloudify-openstack-plugin
+
+
+dsl_definitions:
+
+  client_config: &client_config
+    auth_url: { get_secret: auth_url }
+    username: { get_secret: username }
+    password: { get_secret: password }
+    project_name: { get_secret: project_name }
+    region_name: { get_secret:  region_name }
+
+
+inputs:
+
+  instance_name:
+    default: windows-vm
+
+  image_id:
+    default: 5958a784-57c3-40e8-8fc6-f30dc13397b0
+
+  flavor_id:
+    default: 2
+
+  keypair_name:
+    default: rackspace-keypair
+
+  network_name:
+    default: internal
+
+  security_group_name:
+    default: allow-all
+
+
+node_templates:
+
+  vm:
+    type: cloudify.nodes.openstack.WindowsServer
+    properties:
+      client_config: *client_config
+      agent_config:
+        install_method: init_script
+        user: Admin
+      resource_config:
+        name: { get_input: instance_name }
+        image_id: { get_input: image_id }
+        flavor_id: { get_input: flavor_id }
+        key_name: { get_input: keypair_name }
+        networks:
+          - name: { get_input: network_name }
+        security_groups:
+          - name: { get_input: security_group_name }
+
+  server_script:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: 444
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          implementation: scripts/start-vm.sh
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
