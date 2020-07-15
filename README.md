@@ -1,0 +1,1 @@
+# cloudify-qa-blueprints
