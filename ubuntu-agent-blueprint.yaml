@@ -14,6 +14,8 @@ dsl_definitions:
     password: { get_secret: password }
     project_name: { get_secret: project_name }
     region_name: { get_secret:  region_name }
+    user_domain_name: { get_secret: user_domain_name }
+    project_domain_name: { get_secret: project_domain_name }
 
 
 inputs:
@@ -22,16 +24,16 @@ inputs:
     default: ubuntu-agent
 
   image_id:
-    default: d732f334-28d8-4351-b64f-96375314c4be
+    default: a29c678b-88f3-405e-9fe1-26a2b6a22d23
 
-  flavor_id:
-    default: 2
+  flavor_name:
+    default: m1.medium
 
   keypair_name:
     default: rackspace-keypair
 
-  network_name:
-    default: internal
+  network_id:
+    default: 8cba46eb-d9e9-4079-b063-f3377a0f918b
 
   security_group_name:
     default: allow-all
@@ -49,10 +51,10 @@ node_templates:
       resource_config:
         name: { get_input: instance_name }
         image_id: { get_input: image_id }
-        flavor_id: { get_input: flavor_id }
+        flavor_id: { get_input: flavor_name }
         key_name: { get_input: keypair_name }
         networks:
-          - name: { get_input: network_name }
+          - uuid: { get_input: network_id }
         security_groups:
           - name: { get_input: security_group_name }
 
